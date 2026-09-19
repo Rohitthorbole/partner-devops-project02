@@ -33,12 +33,23 @@ pipeline {
                 }
             }
         }
+        /*
         stage('Terraform Apply') {
             steps {
                 script {
                     dir('terraform/environments/dev/') {
                         echo 'Provisioning the infrastructure...'
                         sh 'terraform apply tfplan'
+                    }
+                }
+            }
+        }*/
+        stage('Terraform destroy') {
+            steps {
+                script {
+                    dir('terraform/environments/dev/') {
+                        echo 'Destroying the infrastructure...'
+                        sh 'terraform destroy -auto-approve'
                     }
                 }
             }
