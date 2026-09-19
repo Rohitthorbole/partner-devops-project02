@@ -11,6 +11,7 @@ pipeline {
                 script {
                     dir('terraform/environments/dev/') {
                         echo 'Initializing Terraform...'
+                        sh 'terraform init'
                         sh 'terraform validate'
                     }
                 }
