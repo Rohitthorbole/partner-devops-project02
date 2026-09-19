@@ -33,5 +33,15 @@ pipeline {
                 }
             }
         }
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    dir('terraform/environments/dev/') {
+                        echo 'Provisioning the infrastructure...'
+                        sh 'terraform apply tfplan'
+                    }
+                }
+            }
+        }
     }
 }
