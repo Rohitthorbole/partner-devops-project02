@@ -28,15 +28,5 @@ pipeline {
                 }
             }
         }
-        stage('Terraform Apply') {
-            steps {
-                script {
-                    dir('terraform/environments/dev/') {
-                        echo 'Applying Terraform changes...'
-                        sh 'terraform apply -auto-approve tfplan'
-                    }
-                }
-            }
-        }
     }
 }
