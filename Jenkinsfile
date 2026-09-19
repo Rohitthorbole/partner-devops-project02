@@ -33,7 +33,7 @@ pipeline {
                 }
             }
         }
-        stage('Terraform Plan') {
+        stage('Terraform Apply') {
             steps {
                 script {
                     dir('terraform/environments/dev/') {
