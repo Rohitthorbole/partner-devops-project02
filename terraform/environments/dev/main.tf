@@ -24,6 +24,5 @@ module "s3" {
 
 module "dynamodb" {
   source = "../../modules/dynamodb"
-  table_name = "partner-devops-project02-table"
-    environment = "dev"
+  environment = "dev"
 }
