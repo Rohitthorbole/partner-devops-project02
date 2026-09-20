@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "this" {
-  name         = var.table_name
+  name        = var.table_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "order_id"
 
@@ -9,7 +9,6 @@ resource "aws_dynamodb_table" "this" {
   }
 
   tags = {
-    Name        = var.table_name
     Environment = var.environment
   }
 }

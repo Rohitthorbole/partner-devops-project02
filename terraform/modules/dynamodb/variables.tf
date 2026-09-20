@@ -1,6 +1,7 @@
 variable "table_name" {
-  description = "DynamoDB table name"
+  description = "Name of the DynamoDB table"
   type        = string
+  default     = "partner-devops-table"
 }
 
 variable "environment" {
