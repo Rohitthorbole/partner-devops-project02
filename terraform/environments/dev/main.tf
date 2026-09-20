@@ -21,3 +21,9 @@ module "s3" {
   bucket_name = "partner-devops-project02-bucket"
   environment = "dev"
 }
+
+module "dynamodb" {
+  source = "../../modules/dynamodb"
+  table_name = "partner-devops-project02-table"
+    environment = "dev"
+}
