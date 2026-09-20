@@ -33,7 +33,7 @@ pipeline {
                 }
             }
         }
-        /*
+        
         stage('Terraform Apply') {
             steps {
                 script {
@@ -44,6 +44,7 @@ pipeline {
                 }
             }
         }
+        /*
         stage('Terraform destroy') {
             steps {
                 script {
