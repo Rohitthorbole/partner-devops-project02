@@ -45,7 +45,7 @@ resource "aws_kms_key" "my_kms_key" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:cloud_user"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/cloud_user"
         }
         Action = "kms:*"
         Resource = "*"
@@ -53,7 +53,7 @@ resource "aws_kms_key" "my_kms_key" {
       {
         Effect = "Allow"
         Principal = {
-          service = "s3.amazonaws.com"
+          Service = "s3.amazonaws.com"
         }
         Action = [
           "kms:Encrypt",
