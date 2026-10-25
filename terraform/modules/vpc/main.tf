@@ -42,6 +42,7 @@ resource "aws_subnet" "my_private_subnet" {
 
 #Route Table
 resource "aws_route_table" "public_route_table" {
+  count = var.create_public_subnet ? 1 : 0
   vpc_id = aws_vpc.my_vpc.id
   tags = {
     Name = "${var.vpc_name}-public-rt"
@@ -49,6 +50,7 @@ resource "aws_route_table" "public_route_table" {
 }
 
 resource "aws_route" "public_route" {
+  count = var.create_public_subnet ? 1 : 0
   route_table_id         = aws_route_table.public_route_table.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.my_igw.id
