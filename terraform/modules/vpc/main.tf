@@ -51,7 +51,7 @@ resource "aws_route_table" "public_route_table" {
 
 resource "aws_route" "public_route" {
   count = var.create_public_subnet ? 1 : 0
-  route_table_id         = aws_route_table.public_route_table.id
+  route_table_id         = aws_route_table.public_route_table[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.my_igw.id
 }
@@ -59,7 +59,7 @@ resource "aws_route" "public_route" {
 resource "aws_route_table_association" "public_route_table_association" {
   count          = var.create_public_subnet ? 1 : 0
   subnet_id      = aws_subnet.my_public_subnet[0].id
-  route_table_id = aws_route_table.public_route_table.id
+  route_table_id = aws_route_table.public_route_table[0].id
 }
 
 resource "aws_nat_gateway" "my_nat_gateway" {
