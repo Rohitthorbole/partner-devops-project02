@@ -10,38 +10,31 @@ variable "vpc_name" {
   type        = string
 }
 
-variable "create_public_subnet" {
-  description = "Whether to create a public subnet"
-  type        = bool
-  default     = false
-}
-
-variable "public_subnet_cidr" {
+variable "public_subnet" {
   description = "The CIDR block for the public subnet"
-  type        = object({
-    cidr_block = string
+  type = list(object({
+    cidr_block        = string
     availability_zone = string
-  })
-  default = null
+  }))
+  default = []
 }
 
-variable "create_private_subnet" {
-  description = "Whether to create a private subnet"
-  type        = bool
-  default     = false
-}
-
-variable "private_subnet_cidr" {
+variable "private_subnet" {
   description = "The CIDR block for the private subnet"
-  type        = object({
-    cidr_block = string
+  type = list(object({
+    cidr_block        = string
     availability_zone = string
-  })
-  default = null
+  }))
+  default = []
 }
 
 variable "create_nat_gateway" {
   description = "Whether to create a NAT Gateway"
   type        = bool
   default     = false
+
+  validation {
+    condition     = !var.create_nat_gateway || length(var.public_subnet) > 0
+    error_message = "At least one public subnet is required when create_nat_gateway is true."
+  }
 }
