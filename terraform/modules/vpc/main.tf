@@ -16,31 +16,30 @@ resource "aws_internet_gateway" "my_igw" {
   }
 }
 
-#subnet
-
+# subnets
 resource "aws_subnet" "my_public_subnet" {
-  for_each                = { for s in var.public_subnet : s.availability_zone => s }
+  for_each                = { for idx, s in var.public_subnet : idx => s }
   vpc_id                  = aws_vpc.my_vpc.id
   cidr_block              = each.value.cidr_block
   availability_zone       = each.value.availability_zone
   map_public_ip_on_launch = true
   tags = {
-    Name = "${var.vpc_name}-public-${each.value.availability_zone}"
+    Name = "${var.vpc_name}-public-${each.value.availability_zone}-${each.key}"
   }
 }
 
 resource "aws_subnet" "my_private_subnet" {
-  for_each                = { for s in var.private_subnet : s.availability_zone => s }
+  for_each                = { for idx, s in var.private_subnet : idx => s }
   vpc_id                  = aws_vpc.my_vpc.id
   cidr_block              = each.value.cidr_block
   availability_zone       = each.value.availability_zone
   map_public_ip_on_launch = false
   tags = {
-    Name = "${var.vpc_name}-private-${each.value.availability_zone}"
+    Name = "${var.vpc_name}-private-${each.value.availability_zone}-${each.key}"
   }
 }
 
-#Route Table
+# route tables
 resource "aws_route_table" "public_route_table" {
   count  = length(var.public_subnet) > 0 ? 1 : 0
   vpc_id = aws_vpc.my_vpc.id
@@ -62,6 +61,14 @@ resource "aws_route_table_association" "public_route_table_association" {
   route_table_id = aws_route_table.public_route_table[0].id
 }
 
+resource "aws_eip" "nat_eip" {
+  count  = var.create_nat_gateway ? 1 : 0
+  domain = "vpc"
+  tags = {
+    Name = "${var.vpc_name}-nat-eip"
+  }
+}
+
 resource "aws_nat_gateway" "my_nat_gateway" {
   count         = var.create_nat_gateway ? 1 : 0
   allocation_id = aws_eip.nat_eip[0].id
@@ -80,14 +87,6 @@ resource "aws_nat_gateway" "my_nat_gateway" {
       condition     = length(var.public_subnet) > 0
       error_message = "At least one public subnet is required when creating a NAT Gateway."
     }
-  }
-}
-
-resource "aws_eip" "nat_eip" {
-  count = var.create_nat_gateway ? 1 : 0
-  vpc   = true
-  tags = {
-    Name = "${var.vpc_name}-nat-eip"
   }
 }
 
