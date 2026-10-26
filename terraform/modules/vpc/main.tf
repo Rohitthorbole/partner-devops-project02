@@ -19,30 +19,30 @@ resource "aws_internet_gateway" "my_igw" {
 #subnet
 
 resource "aws_subnet" "my_public_subnet" {
-  count = var.create_public_subnet ? 1 : 0
+  for_each                = { for s in var.public_subnet : s.availability_zone => s }
   vpc_id                  = aws_vpc.my_vpc.id
-  cidr_block              = var.public_subnet_cidr.cidr_block
-  availability_zone       = var.public_subnet_cidr.availability_zone
+  cidr_block              = each.value.cidr_block
+  availability_zone       = each.value.availability_zone
   map_public_ip_on_launch = true
   tags = {
-    Name = "${var.vpc_name}-public-subnet"
+    Name = "${var.vpc_name}-public-${each.value.availability_zone}"
   }
 }
 
 resource "aws_subnet" "my_private_subnet" {
-  count = var.create_private_subnet ? 1 : 0
+  for_each                = { for s in var.private_subnet : s.availability_zone => s }
   vpc_id                  = aws_vpc.my_vpc.id
-  cidr_block              = var.private_subnet_cidr.cidr_block
-  availability_zone       = var.private_subnet_cidr.availability_zone
+  cidr_block              = each.value.cidr_block
+  availability_zone       = each.value.availability_zone
   map_public_ip_on_launch = false
   tags = {
-    Name = "${var.vpc_name}-private-subnet"
+    Name = "${var.vpc_name}-private-${each.value.availability_zone}"
   }
 }
 
 #Route Table
 resource "aws_route_table" "public_route_table" {
-  count = var.create_public_subnet ? 1 : 0
+  count  = length(var.public_subnet) > 0 ? 1 : 0
   vpc_id = aws_vpc.my_vpc.id
   tags = {
     Name = "${var.vpc_name}-public-rt"
@@ -50,24 +50,36 @@ resource "aws_route_table" "public_route_table" {
 }
 
 resource "aws_route" "public_route" {
-  count = var.create_public_subnet ? 1 : 0
+  count                  = length(var.public_subnet) > 0 ? 1 : 0
   route_table_id         = aws_route_table.public_route_table[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.my_igw.id
 }
 
 resource "aws_route_table_association" "public_route_table_association" {
-  count          = var.create_public_subnet ? 1 : 0
-  subnet_id      = aws_subnet.my_public_subnet[0].id
+  for_each       = aws_subnet.my_public_subnet
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public_route_table[0].id
 }
 
 resource "aws_nat_gateway" "my_nat_gateway" {
   count         = var.create_nat_gateway ? 1 : 0
   allocation_id = aws_eip.nat_eip[0].id
-  subnet_id     = aws_subnet.my_private_subnet[0].id
+
+  # NAT Gateway must be in a public subnet
+  subnet_id = values(aws_subnet.my_public_subnet)[0].id
+
   tags = {
     Name = "${var.vpc_name}-nat-gateway"
+  }
+
+  depends_on = [aws_internet_gateway.my_igw]
+
+  lifecycle {
+    precondition {
+      condition     = length(var.public_subnet) > 0
+      error_message = "At least one public subnet is required when creating a NAT Gateway."
+    }
   }
 }
 
@@ -80,7 +92,7 @@ resource "aws_eip" "nat_eip" {
 }
 
 resource "aws_route_table" "private_route_table" {
-  count  = var.create_private_subnet ? 1 : 0
+  count  = length(var.private_subnet) > 0 ? 1 : 0
   vpc_id = aws_vpc.my_vpc.id
   tags = {
     Name = "${var.vpc_name}-private-rt"
@@ -88,14 +100,18 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route" "private_route" {
-  count                   = var.create_private_subnet ? 1 : 0
-  route_table_id          = aws_route_table.private_route_table[0].id
-  destination_cidr_block  = "0.0.0.0/0"
-  nat_gateway_id          = aws_nat_gateway.my_nat_gateway[0].id
+  count = (
+    var.create_nat_gateway &&
+    length(var.private_subnet) > 0
+  ) ? 1 : 0
+
+  route_table_id         = aws_route_table.private_route_table[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.my_nat_gateway[0].id
 }
 
 resource "aws_route_table_association" "private_route_table_association" {
-  count          = var.create_private_subnet ? 1 : 0
-  subnet_id      = aws_subnet.my_private_subnet[0].id
+  for_each       = aws_subnet.my_private_subnet
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private_route_table[0].id
 }
